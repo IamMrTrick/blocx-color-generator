@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colors API - Advanced Color System Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .status-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            gap: 15px;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+        }
+        
+        .nav-link .title {
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .nav-link .desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .feature h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .code-example {
+            background: #2d3748;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        .code-example pre {
+            color: #e2e8f0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .endpoints-list {
+            margin-top: 20px;
+        }
+        
+        .endpoint {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .endpoint .method {
+            font-weight: 600;
+            color: #667eea;
+            font-family: monospace;
+            margin-bottom: 5px;
+        }
+        
+        .endpoint .description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .full-docs {
+            grid-column: 1 / -1;
+            margin-top: 30px;
+        }
+        
+        .themes-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .theme-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .theme-card .emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .theme-card h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .theme-card p {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .swagger-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .swagger-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎨 Colors API</h1>
+            <p>Advanced Color System Generator with Professional Color Theory</p>
+            <div class="status-badges">
+                <div class="badge success">
+                    <i class="fas fa-check-circle"></i>
+                    Server Running
+                </div>
+                <div class="badge info">
+                    <i class="fas fa-rocket"></i>
+                    v1.0.0
+                </div>
+                <div class="badge info">
+                    <i class="fas fa-palette"></i>
+                    WCAG Compliant
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <a href="/api-docs" class="swagger-button">
+                    <i class="fas fa-book"></i>
+                    Open Swagger Documentation
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Quick Navigation -->
+            <div class="card">
+                <h2><i class="fas fa-compass"></i>Quick Navigation</h2>
+                <div class="nav-links">
+                    <a href="/api" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <div class="title">API Information</div>
+                            <div class="desc">Complete API overview and examples</div>
+                        </div>
+                    </a>
+                    <a href="/health" class="nav-link">
+                        <i class="fas fa-heartbeat"></i>
+                        <div>
+                            <div class="title">Health Check</div>
+                            <div class="desc">Server status and uptime</div>
+                        </div>
+                    </a>
+                    <a href="/api-docs" class="nav-link">
+                        <i class="fas fa-book-open"></i>
+                        <div>
+                            <div class="title">Swagger Documentation</div>
+                            <div class="desc">Interactive API documentation</div>
+                        </div>
+                    </a>
+                    <a href="/api/colors/formats" class="nav-link">
+                        <i class="fas fa-download"></i>
+                        <div>
+                            <div class="title">Export Formats</div>
+                            <div class="desc">Available export formats</div>
+                        </div>
+                    </a>
+                    <a href="/api/colors/themes" class="nav-link">
+                        <i class="fas fa-swatchbook"></i>
+                        <div>
+                            <div class="title">Theme Options</div>
+                            <div class="desc">Gray and background themes</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="card">
+                <h2><i class="fas fa-star"></i>Key Features</h2>
+                <div class="feature-grid">
+                    <div class="feature">
+                        <i class="fas fa-magic"></i>
+                        <h3>Smart Suggestions</h3>
+                        <p>3 AI-powered secondary color suggestions based on color theory</p>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-palette"></i>
+                        <h3>Complete System</h3>
+                        <p>66+ colors including semantic, component, and utility colors</p>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-cogs"></i>
+                        <h3>Advanced Themes</h3>
+                        <p>5 different gray and background theme options</p>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-file-export"></i>
+                        <h3>Multi-Format</h3>
+                        <p>Export to CSS, SCSS, JSON, Figma, Tailwind, CSV</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div class="card full-docs">
+            <h2><i class="fas fa-plug"></i>API Endpoints</h2>
+            <div class="endpoints-list">
+                <div class="endpoint">
+                    <div class="method">POST /api/colors/suggestions</div>
+                    <div class="description">Generate 3 secondary color suggestions based on primary color using color theory</div>
+                </div>
+                <div class="endpoint">
+                    <div class="method">POST /api/colors/generate</div>
+                    <div class="description">Generate complete color system with 66+ colors including semantic and component colors</div>
+                </div>
+                <div class="endpoint">
+                    <div class="method">GET /api/colors/export/:format</div>
+                    <div class="description">Export color system in CSS, SCSS, JSON, Figma, Tailwind, or CSV format</div>
+                </div>
+                <div class="endpoint">
+                    <div class="method">GET /api/colors/session/:sessionId</div>
+                    <div class="description">Retrieve cached color system by session ID</div>
+                </div>
+                <div class="endpoint">
+                    <div class="method">GET /api/colors/formats</div>
+                    <div class="description">Get list of all available export formats with descriptions</div>
+                </div>
+                <div class="endpoint">
+                    <div class="method">GET /api/colors/themes</div>
+                    <div class="description">Get available gray and background theme options</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Example -->
+        <div class="card full-docs">
+            <h2><i class="fas fa-code"></i>Quick Start Example</h2>
+            <div class="code-example">
+                <pre><code>// Step 1: Get color suggestions
+const response = await fetch('/api/colors/suggestions', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ primaryColor: '#3B82F6' })
+});
+
+const suggestions = await response.json();
+console.log(suggestions.data.suggestions);
+
+// Step 2: Generate complete color system
+const generateResponse = await fetch('/api/colors/generate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    primaryColor: '#3B82F6',
+    secondaryColor: suggestions.data.suggestions[0].color,
+    grayTheme: 'blue',
+    backgroundTheme: 'auto'
+  })
+});
+
+const colorSystem = await generateResponse.json();
+const sessionId = colorSystem.data.sessionId;
+
+// Step 3: Export with advanced options
+const params = new URLSearchParams({
+  sessionId: sessionId,
+  prefix: '--my-app',
+  caseStyle: 'snake_case',
+  mode: 'both',
+  structure: 'sections'  // for JSON only
+});
+
+// Download CSS with snake_case variables
+window.open(`/api/colors/export/css?${params}`);
+
+// Or export JSON with themes structure
+params.set('structure', 'themes');
+window.open(`/api/colors/export/json?${params}`);</code></pre>
+            </div>
+        </div>
+
+        <!-- Advanced Features -->
+        <div class="card full-docs">
+            <h2><i class="fas fa-cogs"></i>Advanced Export Options</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <h3 style="margin-bottom: 10px; color: #333;">🐍 Variable Naming</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Choose your preferred naming convention:</p>
+                    <div style="background: #2d3748; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                        <code style="color: #e2e8f0; font-size: 0.8rem;">snake_case: --primary_05<br/>camelCase: --primary05</code>
+                    </div>
+                    <p style="color: #666; font-size: 0.8rem;">Default: <strong>snake_case</strong></p>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <h3 style="margin-bottom: 10px; color: #333;">🏷️ Custom Prefixes</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Add your own prefix to all variables:</p>
+                    <div style="background: #2d3748; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                        <code style="color: #e2e8f0; font-size: 0.8rem;">--myApp-primary-05<br/>$myApp_primary_05</code>
+                    </div>
+                    <p style="color: #666; font-size: 0.8rem;">Default: <strong>--</strong> (CSS) or <strong>$</strong> (SCSS)</p>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <h3 style="margin-bottom: 10px; color: #333;">🌓 Theme Modes</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Export specific color themes:</p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">both</span>
+                        <span style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">light</span>
+                        <span style="background: #6b7280; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">dark</span>
+                    </div>
+                    <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">Default: <strong>both</strong></p>
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <h3 style="margin-bottom: 10px; color: #333;">📊 JSON Structures</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Two JSON output formats:</p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+                        <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">sections</span>
+                        <span style="background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">themes</span>
+                    </div>
+                    <p style="color: #666; font-size: 0.8rem;">Sections: by categories<br/>Themes: by light/dark</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Themes -->
+        <div class="card full-docs">
+            <h2><i class="fas fa-swatchbook"></i>Available Themes</h2>
+            <h3 style="margin-bottom: 15px;">Gray Themes</h3>
+            <div class="themes-demo">
+                <div class="theme-card">
+                    <div class="emoji">🔗</div>
+                    <h4>Smart Auto</h4>
+                    <p>Based on primary color</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">❄️</div>
+                    <h4>Blue Grays</h4>
+                    <p>Cool professional tone</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">🌿</div>
+                    <h4>Warm Earth</h4>
+                    <p>Brown & green undertones</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">⚫</div>
+                    <h4>Pure Black</h4>
+                    <p>Classic monochrome</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">⚪</div>
+                    <h4>Neutral Gray</h4>
+                    <p>Pure balanced grays</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0;">Background Themes</h3>
+            <div class="themes-demo">
+                <div class="theme-card">
+                    <div class="emoji">🔗</div>
+                    <h4>Smart Auto</h4>
+                    <p>Complementary harmony</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">🌊</div>
+                    <h4>Deep Blue</h4>
+                    <p>Navy & midnight tones</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">🏔️</div>
+                    <h4>Earth Tones</h4>
+                    <p>Warm charcoal & brown</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">🌚</div>
+                    <h4>Pure Black</h4>
+                    <p>Classic dark theme</p>
+                </div>
+                <div class="theme-card">
+                    <div class="emoji">🌫️</div>
+                    <h4>Neutral Gray</h4>
+                    <p>Balanced dark grays</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card full-docs" style="text-align: center; margin-top: 30px;">
+            <h2><i class="fas fa-heart"></i>Built with Love</h2>
+            <p>Advanced color system generator using professional color theory and WCAG accessibility standards.</p>
+            <div style="margin-top: 20px;">
+                <a href="/api-docs" class="swagger-button">
+                    <i class="fas fa-rocket"></i>
+                    Start Building with Colors API
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>
