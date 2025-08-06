@@ -8,6 +8,40 @@ const camelToSnake = (str) => {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 };
 
+// Helper function to make section names clearer and more descriptive
+const getSectionDisplayName = (sectionName) => {
+  const sectionMap = {
+    'base': 'Base Colors',
+    'primary': 'Primary Colors', 
+    'secondary': 'Secondary Colors',
+    'gray': 'Gray Scale',
+    'error': 'Error Colors',
+    'warning': 'Warning Colors', 
+    'success': 'Success Colors',
+    'info': 'Info Colors',
+    'interfaceBg': 'Interface Backgrounds',
+    'text': 'Text Colors',
+    'icon': 'Icon Colors',
+    'border': 'Border Colors',
+    'card': 'Card Colors',
+    'input': 'Input Colors',
+    'buttonPrimary': 'Primary Buttons',
+    'buttonSecondary': 'Secondary Buttons',
+    'buttonTertiary': 'Tertiary Buttons',
+    'buttonQuaternary': 'Quaternary Buttons',
+    'buttonQuinary': 'Quinary Buttons',
+    'buttonSenary': 'Senary Buttons',
+    'buttonSeptenary': 'Septenary Buttons',
+    'header': 'Header Navigation',
+    'odds': 'Odds Display',
+    'sidebarNav': 'Sidebar Navigation',
+    'sidebarButton': 'Sidebar Buttons',
+    'transparency': 'Transparency Effects'
+  };
+  
+  return sectionMap[sectionName] || sectionName;
+};
+
 // Helper function to convert section names based on naming convention
 const formatSectionName = (sectionName, caseStyle = 'snake_case') => {
   if (caseStyle === 'snake_case') {
@@ -16,17 +50,15 @@ const formatSectionName = (sectionName, caseStyle = 'snake_case') => {
   return sectionName; // camelCase
 };
 
-// Helper function to format variable names with prefix
-const formatVariableName = (name, prefix = '--', caseStyle = 'snake_case') => {
+// Helper function to format variable names with prefix (always kebab-case)
+const formatVariableName = (name, prefix = '--') => {
   // Ensure prefix ends with appropriate separator
   let formattedPrefix = prefix;
   if (!formattedPrefix.endsWith('-') && !formattedPrefix.endsWith('_')) {
     formattedPrefix += '-';
   }
   
-  if (caseStyle === 'snake_case') {
-    return `${formattedPrefix}${name.replace(/-/g, '_')}`;
-  }
+  // Always keep variable names in kebab-case
   return `${formattedPrefix}${name}`;
 };
 
@@ -44,11 +76,11 @@ const exportToCSS = (colorSystem, options = {}) => {
     Object.entries(colorSystem).forEach(([sectionName, colors]) => {
       if (sectionName === 'metadata' || !colors || !Array.isArray(colors)) return;
       
-      const formattedSectionName = formatSectionName(sectionName, caseStyle);
-      variables.push(`  /* ${formattedSectionName.charAt(0).toUpperCase() + formattedSectionName.slice(1).replace(/_/g, ' ')} */`);
+      const displayName = getSectionDisplayName(sectionName);
+      variables.push(`  /* ${displayName} */`);
       
       colors.forEach(color => {
-        const variableName = formatVariableName(color.name, prefix, caseStyle);
+        const variableName = formatVariableName(color.name, prefix);
         variables.push(`  ${variableName}: ${color[themeMode]};`);
       });
       
@@ -105,8 +137,8 @@ const exportToSCSS = (colorSystem, options = {}) => {
     Object.entries(colorSystem).forEach(([sectionName, colors]) => {
       if (sectionName === 'metadata' || !colors || !Array.isArray(colors)) return;
       
-      const formattedSectionName = formatSectionName(sectionName, caseStyle);
-      variables.push(`// ${formattedSectionName.charAt(0).toUpperCase() + formattedSectionName.slice(1).replace(/_/g, ' ')}`);
+      const displayName = getSectionDisplayName(sectionName);
+      variables.push(`// ${displayName}`);
       
       colors.forEach(color => {
         let scssPrefix = prefix.replace(/^--/, '').replace(/-$/, '');
@@ -153,7 +185,7 @@ const exportToJSON = (colorSystem, options = {}) => {
         if (sectionName === 'metadata' || !colors || !Array.isArray(colors)) return;
         
         colors.forEach(color => {
-          const variableName = formatVariableName(color.name, prefix, caseStyle);
+          const variableName = formatVariableName(color.name, prefix);
           list.push({
             key: variableName,
             value: color[themeMode]
@@ -183,7 +215,7 @@ const exportToJSON = (colorSystem, options = {}) => {
         const formattedSectionName = formatSectionName(sectionName, caseStyle);
         tokens[formattedSectionName] = {};
         colors.forEach(color => {
-          const variableName = formatVariableName(color.name, prefix, caseStyle);
+          const variableName = formatVariableName(color.name, prefix);
           tokens[formattedSectionName][variableName] = {
             value: color[themeMode],
             description: color.description || ''
@@ -262,9 +294,7 @@ const exportToFigma = (colorSystem, options = {}) => {
       variableIds.push(variableId);
       
       const formattedSectionName = formatSectionName(sectionName, caseStyle);
-      const variableName = caseStyle === 'snake_case' 
-        ? color.name.replace(/-/g, '_')
-        : color.name;
+      const variableName = color.name; // Always keep kebab-case
       
       const variableObj = {
         id: variableId,
@@ -392,7 +422,7 @@ const exportToCSV = (colorSystem, options = {}) => {
     
     const formattedSectionName = formatSectionName(sectionName, caseStyle);
     colors.forEach(color => {
-      const variableName = formatVariableName(color.name, prefix, caseStyle);
+      const variableName = formatVariableName(color.name, prefix);
       if (mode === 'both') {
         rows.push([
           formattedSectionName,

@@ -3,19 +3,232 @@
  * Based EXACTLY on the original mini-app.ts code with all 292 colors
  */
 
-// Helper function to get optimal text color
+// CSS Variable Color Mapping for accurate text color selection
+const cssVariableColorMap = {
+  // Base colors
+  '--black': 'dark',
+  '--white': 'light',
+  
+  // Gray scale (01 = lightest, 10 = darkest)
+  '--gray-01': 'light',
+  '--gray-02': 'light', 
+  '--gray-03': 'light',
+  '--gray-04': 'light',
+  '--gray-05': 'medium', // neutral
+  '--gray-06': 'dark',
+  '--gray-07': 'dark',
+  '--gray-08': 'dark',
+  '--gray-09': 'dark',
+  '--gray-10': 'dark',
+  
+  // Primary colors (usually colorful/medium-dark)
+  '--primary-01': 'light',
+  '--primary-02': 'light',
+  '--primary-03': 'light',
+  '--primary-04': 'dark',
+  '--primary-05': 'dark',
+  '--primary-06': 'dark',
+  '--primary-07': 'dark',
+  '--primary-08': 'dark',
+  '--primary-09': 'light',
+  '--primary-10': 'light',
+  
+  // Secondary colors
+  '--secondary-01': 'light',
+  '--secondary-02': 'light',
+  '--secondary-03': 'light',
+  '--secondary-04': 'dark',
+  '--secondary-05': 'dark',
+  '--secondary-06': 'dark',
+  '--secondary-07': 'dark',
+  '--secondary-08': 'dark',
+  '--secondary-09': 'light',
+  '--secondary-10': 'light',
+  
+  // Success colors (green variants)
+  '--success-01': 'light',
+  '--success-02': 'light',
+  '--success-03': 'light',
+  '--success-04': 'dark',
+  '--success-05': 'dark',
+  '--success-06': 'dark', // Used in sidebar primary active
+  '--success-07': 'dark',
+  '--success-08': 'dark',
+  '--success-09': 'light',
+  '--success-10': 'light',
+  
+  // Warning colors (orange/yellow variants)
+  '--warning-01': 'light',
+  '--warning-02': 'light',
+  '--warning-03': 'light',
+  '--warning-04': 'dark',
+  '--warning-05': 'dark',
+  '--warning-06': 'dark', // Used in sidebar secondary active
+  '--warning-07': 'dark',
+  '--warning-08': 'dark',
+  '--warning-09': 'light',
+  '--warning-10': 'light',
+  
+  // Error colors (red variants)
+  '--error-01': 'light',
+  '--error-02': 'light',
+  '--error-03': 'light',
+  '--error-04': 'dark',
+  '--error-05': 'dark',
+  '--error-06': 'dark',
+  '--error-07': 'dark',
+  '--error-08': 'dark',
+  '--error-09': 'light',
+  '--error-10': 'light',
+};
+
+// Calculate relative luminance according to WCAG guidelines
+const getLuminance = (r, g, b) => {
+  const [rs, gs, bs] = [r, g, b].map(c => {
+    c = c / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+};
+
+// Calculate contrast ratio between two colors
+const getContrastRatio = (color1, color2) => {
+  const lum1 = getLuminance(color1[0], color1[1], color1[2]);
+  const lum2 = getLuminance(color2[0], color2[1], color2[2]);
+  const brightest = Math.max(lum1, lum2);
+  const darkest = Math.min(lum1, lum2);
+  return (brightest + 0.05) / (darkest + 0.05);
+};
+
+// Helper function to convert hex to RGB
+const hexToRgb = (hex) => {
+  // Validate hex color format
+  if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) {
+    throw new Error(`Invalid hex color format: ${hex}. Expected format: #RRGGBB`);
+  }
+  
+  // Validate hex characters
+  const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+  if (!hexRegex.test(hex)) {
+    throw new Error(`Invalid hex color characters: ${hex}. Only 0-9, A-F, a-f are allowed.`);
+  }
+  
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+};
+
+// Smart Text Color Detection - WCAG AA Compliant (4.5:1 contrast ratio)
 const getOptimalTextColor = (backgroundColor) => {
-  // Convert hex to RGB
-  const hex = backgroundColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
+  // Define standard colors for testing
+  const whiteRGB = [255, 255, 255];
+  const blackRGB = [0, 0, 0];
   
-  // Calculate luminance
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  // Handle CSS variables with smart mapping
+  if (backgroundColor.startsWith('var(')) {
+    // Extract variable name
+    const varMatch = backgroundColor.match(/var\(([^)]+)\)/);
+    if (varMatch) {
+      const varName = varMatch[1];
+      const colorType = cssVariableColorMap[varName];
+      
+      if (colorType === 'light') {
+        return 'var(--black)';
+      } else if (colorType === 'dark') {
+        return 'var(--white)';
+      } else if (colorType === 'medium') {
+        // For medium colors, prefer white text
+        return 'var(--white)';
+      }
+    }
+    
+    // Fallback analysis for unmapped variables
+    const varName = backgroundColor.toLowerCase();
+    
+    // White/light colors -> black text
+    if (varName.includes('white') || varName.includes('01') || varName.includes('02')) {
+      return 'var(--black)';
+    }
+    
+    // Black/dark colors -> white text  
+    if (varName.includes('black') || varName.includes('08') || varName.includes('09') || varName.includes('10')) {
+      return 'var(--white)';
+    }
+    
+    // Default for unknowns (prefer white for safety)
+    return 'var(--white)';
+  }
   
-  // Return white for dark backgrounds, black for light backgrounds
-  return luminance < 0.5 ? '#FFFFFF' : '#000000';
+  // Handle rgba values
+  if (backgroundColor.startsWith('rgba(')) {
+    const rgbaMatch = backgroundColor.match(/rgba\(([^)]+)\)/);
+    if (rgbaMatch) {
+      const [r, g, b] = rgbaMatch[1].split(',').map(v => parseFloat(v.trim()));
+      const bgRGB = [r, g, b];
+      
+      // Calculate contrast ratios
+      const whiteContrast = getContrastRatio(bgRGB, whiteRGB);
+      const blackContrast = getContrastRatio(bgRGB, blackRGB);
+      
+      // WCAG AA standard: 4.5:1 minimum for normal text
+      // Choose the option with higher contrast
+      if (whiteContrast > blackContrast && whiteContrast >= 4.5) {
+        return 'var(--white)';
+      } else if (blackContrast >= 4.5) {
+        return 'var(--black)';
+      } else {
+        // If neither meets WCAG AA, choose the better one
+        return whiteContrast > blackContrast ? 'var(--white)' : 'var(--black)';
+      }
+    }
+  }
+  
+  // Handle hex values
+  if (backgroundColor.startsWith('#')) {
+    const { r, g, b } = hexToRgb(backgroundColor);
+    const bgRGB = [r, g, b];
+    
+    // Calculate contrast ratios
+    const whiteContrast = getContrastRatio(bgRGB, whiteRGB);
+    const blackContrast = getContrastRatio(bgRGB, blackRGB);
+    
+    // WCAG AA standard: 4.5:1 minimum for normal text
+    if (whiteContrast > blackContrast && whiteContrast >= 4.5) {
+      return 'var(--white)';
+    } else if (blackContrast >= 4.5) {
+      return 'var(--black)';
+    } else {
+      // If neither meets WCAG AA, choose the better one
+      return whiteContrast > blackContrast ? 'var(--white)' : 'var(--black)';
+    }
+  }
+  
+  // Handle gradients - extract first color for analysis
+  if (backgroundColor.includes('gradient')) {
+    // Try to extract the first color from gradient
+    const colorMatch = backgroundColor.match(/#[0-9a-fA-F]{6}|rgba?\([^)]+\)/);
+    if (colorMatch) {
+      return getOptimalTextColor(colorMatch[0]);
+    }
+    // Default for complex gradients
+    return 'var(--white)';
+  }
+  
+  // Default fallback
+  return 'var(--white)';
+};
+
+// Debug function for contrast ratio testing
+const debugContrastRatio = (color1, color2) => {
+  const contrast = getContrastRatio(color1, color2);
+  console.log(`🔍 Contrast Debug:`);
+  console.log(`   Color 1: ${color1}`);
+  console.log(`   Color 2: ${color2}`);
+  console.log(`   Contrast Ratio: ${contrast.toFixed(2)}:1`);
+  console.log(`   WCAG AA (4.5:1): ${contrast >= 4.5 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`   WCAG AAA (7:1): ${contrast >= 7 ? '✅ PASS' : '❌ FAIL'}`);
+  return contrast;
 };
 
 // Color utilities
@@ -68,12 +281,17 @@ const hslToHex = (h, s, l) => {
     return p;
   };
 
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  
-  const r = hue2rgb(p, q, h + 1/3);
-  const g = hue2rgb(p, q, h);
-  const b = hue2rgb(p, q, h - 1/3);
+  let r, g, b;
+
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
 
   const toHex = (c) => {
     const hex = Math.round(c * 255).toString(16);
@@ -133,59 +351,94 @@ const generateShades = (baseHex, name) => {
   return shades;
 };
 
-// Helper function to get theme harmony
+// Helper function to get consistent theme colors for gray and background harmony
 const getThemeHarmony = (theme, primaryHex) => {
   const [primaryH, primaryS] = hexToHsl(primaryHex);
   
-  const themes = {
-    'blue': {
-      hue: 220,
-      saturation: { gray: Math.min(primaryS * 0.3, 25), background: Math.min(primaryS * 0.4, 35) },
-      description: 'Cool blue professional tone'
-    },
-    'green-brown': {
-      hue: 30,
-      saturation: { gray: Math.min(primaryS * 0.25, 20), background: Math.min(primaryS * 0.35, 30) },
-      description: 'Warm earth tones with brown & green undertones'
-    },
-    'black': {
-      hue: 0,
-      saturation: { gray: 0, background: 0 },
-      description: 'Pure monochrome classic'
-    },
-    'neutral': {
-      hue: 0,
-      saturation: { gray: 0, background: 0 },
-      description: 'Pure balanced grays'
-    }
-  };
-  
-  return themes[theme] || null;
+  switch (theme) {
+    case 'blue':
+      return {
+        hue: 220, // Classic blue
+        saturation: {
+          gray: Math.min(primaryS * 0.35, 25),
+          background: Math.min(primaryS * 0.8, 50)
+        },
+        description: 'blue harmony'
+      };
+    case 'green-brown':
+      return {
+        hue: 35, // Warm brown
+        saturation: {
+          gray: Math.min(primaryS * 0.4, 28),
+          background: Math.min(primaryS * 0.6, 35)
+        },
+        description: 'green-brown harmony'
+      };
+    case 'black':
+      return {
+        hue: 0, // True neutral
+        saturation: {
+          gray: Math.min(primaryS * 0.08, 6),
+          background: Math.min(primaryS * 0.2, 15)
+        },
+        description: 'black harmony'
+      };
+    case 'neutral':
+      return {
+        hue: 200, // Cool gray
+        saturation: {
+          gray: Math.min(primaryS * 0.12, 8),
+          background: Math.min(primaryS * 0.12, 8)
+        },
+        description: 'neutral harmony'
+      };
+    default: // auto
+      return null;
+  }
 };
 
-// Generate color suggestions
+// Generate 3 optimal secondary color suggestions based on color theory
 const generateSecondaryColorSuggestions = (primaryHex) => {
   const [h, s, l] = hexToHsl(primaryHex);
   
-  const suggestions = [
+  // Option 1: Complementary (High contrast, professional)
+  const complementary = {
+    h: (h + 180) % 360,
+    s: Math.max(50, Math.min(s * 0.9, 85)),
+    l: Math.max(40, Math.min(70, l * 1.1))
+  };
+  
+  // Option 2: Triadic (Vibrant, creative)
+  const triadic = {
+    h: (h + 120) % 360,
+    s: Math.max(55, Math.min(s * 0.85, 80)), 
+    l: Math.max(45, Math.min(65, l * 1.05))
+  };
+  
+  // Option 3: Split-complementary (Harmonious, sophisticated)
+  const splitComplementary = {
+    h: (h + 150) % 360,
+    s: Math.max(50, Math.min(s * 0.95, 75)),
+    l: Math.max(40, Math.min(68, l * 1.08))
+  };
+  
+  return [
     {
-      color: hslToHex((h + 180) % 360, s, l),
+      color: hslToHex(complementary.h, complementary.s, complementary.l),
       name: 'Complementary',
       description: 'High contrast, professional'
     },
     {
-      color: hslToHex((h + 120) % 360, s, l),
+      color: hslToHex(triadic.h, triadic.s, triadic.l),
       name: 'Triadic',
       description: 'Vibrant, creative energy'
     },
     {
-      color: hslToHex((h + 150) % 360, s, l),
-      name: 'Split-Complementary',
+      color: hslToHex(splitComplementary.h, splitComplementary.s, splitComplementary.l),
+      name: 'Split-Complementary', 
       description: 'Harmonious, sophisticated'
     }
   ];
-  
-  return suggestions;
 };
 
 // Validate hex color
@@ -195,47 +448,134 @@ const isValidHexColor = (color) => {
   return hexRegex.test(color);
 };
 
-// Generate gray shades (10 colors)
+// Advanced Gray Colors Algorithm with theme options
 const generateGrayShades = (primaryHex, secondaryHex, theme = 'auto') => {
   const [primaryH, primaryS] = hexToHsl(primaryHex);
   const [secondaryH, secondaryS] = hexToHsl(secondaryHex);
   
-  let baseHue;
-  let baseSaturation;
+  // Smart color family detection based on primary hue
+  const getColorFamily = (hue) => {
+    if (hue >= 0 && hue < 30) return 'red-orange'; // Red to orange
+    if (hue >= 30 && hue < 60) return 'orange-yellow'; // Orange to yellow
+    if (hue >= 60 && hue < 90) return 'yellow-green'; // Yellow to green
+    if (hue >= 90 && hue < 150) return 'green'; // Green family
+    if (hue >= 150 && hue < 210) return 'cyan-blue'; // Cyan to blue
+    if (hue >= 210 && hue < 270) return 'blue-purple'; // Blue to purple
+    if (hue >= 270 && hue < 330) return 'purple-magenta'; // Purple to magenta
+    return 'magenta-red'; // Magenta to red
+  };
   
+  const primaryFamily = getColorFamily(primaryH);
+  const secondaryFamily = getColorFamily(secondaryH);
+  
+  // Define gray bias based on color families
+  let grayHue;
+  let graySaturation;
+  let grayDescription;
+  
+  // Theme-based hue selection
   if (theme === 'auto') {
-    // Smart auto-detection based on primary color
-    if (primaryH >= 200 && primaryH <= 260) {
-      baseHue = primaryH;
-      baseSaturation = Math.min(primaryS * 0.3, 25);
-    } else if (primaryH >= 30 && primaryH <= 90) {
-      baseHue = 30;
-      baseSaturation = Math.min(primaryS * 0.25, 20);
-    } else {
-      baseHue = 220;
-      baseSaturation = Math.min(primaryS * 0.3, 25);
+    // Smart hue selection for grays based on primary color family (enhanced visibility)
+    switch (primaryFamily) {
+      case 'red-orange':
+      case 'orange-yellow':
+        // Warm colors → Brown-leaning grays
+        grayHue = 30; // Brown undertone
+        graySaturation = Math.min(primaryS * 0.3, 22); // Increased for visibility
+        grayDescription = 'brown-leaning (auto)';
+        break;
+        
+      case 'yellow-green':
+      case 'green':
+        // Green colors → Cool blue grays to balance
+        grayHue = 210; // Cool blue undertone to balance green
+        graySaturation = Math.min(primaryS * 0.25, 20); // Increased for visibility
+        grayDescription = 'cool-blue (auto)';
+        break;
+        
+      case 'cyan-blue':
+      case 'blue-purple':
+        // Blue/purple colors → Enhanced blue grays
+        grayHue = 220; // Classic blue for more consistency
+        graySaturation = Math.min(primaryS * 0.3, 24); // Increased for visibility
+        grayDescription = 'blue-enhanced (auto)';
+        break;
+        
+      case 'purple-magenta':
+        // Purple/magenta → Purple-blue grays
+        grayHue = 250; // More purple undertone
+        graySaturation = Math.min(primaryS * 0.28, 22); // Increased for visibility
+        grayDescription = 'purple-blue (auto)';
+        break;
+        
+      case 'magenta-red':
+        // Magenta/red → Warm pink-gray
+        grayHue = 350; // Pink undertone
+        graySaturation = Math.min(primaryS * 0.25, 18); // Increased for visibility
+        grayDescription = 'warm-pink (auto)';
+        break;
+        
+      default:
+        // Fallback
+        grayHue = primaryH;
+        graySaturation = Math.min(primaryS * 0.2, 15); // Increased baseline
+        grayDescription = 'harmonized (auto)';
     }
   } else {
+    // Manual theme selection with enhanced visibility and harmony
     const harmony = getThemeHarmony(theme, primaryHex);
     if (harmony) {
-      baseHue = harmony.hue;
-      baseSaturation = harmony.saturation.gray;
+      grayHue = harmony.hue;
+      graySaturation = harmony.saturation.gray;
+      grayDescription = harmony.description;
     } else {
-      baseHue = 220;
-      baseSaturation = 25;
+      grayHue = primaryH;
+      graySaturation = Math.min(primaryS * 0.2, 15);
+      grayDescription = 'default';
     }
   }
   
+  // Only blend with secondary if colors are harmonious (within same color family)
+  // Avoid blending complementary colors that create muddy grays
+  const secondaryInfluence = secondaryS / 100;
+  const hueDistance = Math.abs(primaryH - secondaryH);
+  const isHarmonious = hueDistance <= 60 || hueDistance >= 300; // Adjacent or near-adjacent on color wheel
+  
+  if (secondaryInfluence > 0.6 && isHarmonious) {
+    // Only blend if colors are harmonious (not complementary)
+    const avgHue = (primaryH + secondaryH) / 2;
+    grayHue = (grayHue * 0.7) + (avgHue * 0.3); // Less secondary influence
+    graySaturation = Math.min(graySaturation * 1.1, 20); // Reduced saturation boost
+  }
+  
   const shades = [];
+  
   for (let i = 1; i <= 10; i++) {
-    const lightLightness = 95 - (i - 1) * 9; // 95, 86, 77, 68, 59, 50, 41, 32, 23, 14
-    const darkLightness = 8 + (i - 1) * 8.5; // 8, 16.5, 25, 33.5, 42, 50.5, 59, 67.5, 76, 84.5
+    // Improved lightness progression for better hierarchy
+    const lightLightness = 98 - (i - 1) * 9; // 98, 89, 80, 71, 62, 53, 44, 35, 26, 17
+    
+    // Better dark mode progression for proper contrast
+    let darkLightness;
+    if (i <= 3) {
+      darkLightness = 10 + (i - 1) * 6; // 10, 16, 22 (dark backgrounds)
+    } else if (i <= 6) {
+      darkLightness = 22 + (i - 3) * 8; // 30, 38, 46 (medium backgrounds)
+    } else {
+      darkLightness = 46 + (i - 6) * 10; // 56, 66, 76, 86 (light foregrounds)
+    }
+    
+    // Adjust saturation for better progression with enhanced visibility
+    const adjustedSaturation = i <= 2 ? graySaturation * 0.8 : // Less reduction for light shades
+                              i >= 8 ? graySaturation * 1.4 : graySaturation; // More boost for dark shades
+    
+    const lightColor = hslToHex(grayHue, adjustedSaturation, lightLightness);
+    const darkColor = hslToHex(grayHue, adjustedSaturation, darkLightness); // Keep same saturation in dark mode
     
     shades.push({
       name: `gray-${i.toString().padStart(2, '0')}`,
-      light: hslToHex(baseHue, baseSaturation, lightLightness),
-      dark: hslToHex(baseHue, baseSaturation, darkLightness),
-      description: `Gray color shade ${i.toString().padStart(2, '0')}`
+      light: lightColor,
+      dark: darkColor,
+      description: `Smart ${grayDescription} gray ${i.toString().padStart(2, '0')} based on ${primaryFamily} primary`
     });
   }
   
@@ -341,123 +681,129 @@ const generateErrorColors = () => {
   return shades;
 };
 
-// Generate warning colors (8 colors)
+// Advanced Warning Colors - Orange/Amber spectrum optimized for visibility
 const generateWarningColors = () => {
-  const warningBase = { h: 35, s: 95, l: 50 };
+  // Base warning color: Professional amber/orange
+  const warningBase = { h: 35, s: 92, l: 55 }; // #F79009 equivalent
   const shades = [];
   
   for (let i = 1; i <= 8; i++) {
     let lightLightness, lightSaturation, darkLightness, darkSaturation;
     
     switch(i) {
-      case 1:
-        lightLightness = 97; lightSaturation = 25;
-        darkLightness = 12; darkSaturation = 40;
+      case 1: // Very light backgrounds
+        lightLightness = 98; lightSaturation = 25;
+        darkLightness = 18; darkSaturation = 40;
         break;
-      case 2:
-        lightLightness = 92; lightSaturation = 40;
-        darkLightness = 18; darkSaturation = 50;
+      case 2: // Light backgrounds
+        lightLightness = 94; lightSaturation = 40;
+        darkLightness = 25; darkSaturation = 50;
         break;
-      case 3:
-        lightLightness = 84; lightSaturation = 55;
-        darkLightness = 26; darkSaturation = 60;
+      case 3: // Subtle accents
+        lightLightness = 87; lightSaturation = 55;
+        darkLightness = 32; darkSaturation = 60;
         break;
-      case 4:
-        lightLightness = 70; lightSaturation = 70;
-        darkLightness = 36; darkSaturation = 70;
+      case 4: // Medium contrast
+        lightLightness = 75; lightSaturation = 70;
+        darkLightness = 42; darkSaturation = 70;
         break;
-      case 5:
-        lightLightness = 58; lightSaturation = 85;
-        darkLightness = 48; darkSaturation = 80;
+      case 5: // Standard warning
+        lightLightness = 65; lightSaturation = 85;
+        darkLightness = 55; darkSaturation = 80;
         break;
-      case 6:
-        lightLightness = 50; lightSaturation = 95;
-        darkLightness = 50; darkSaturation = 95;
+      case 6: // Strong warning (main)
+        lightLightness = 55; lightSaturation = 92;
+        darkLightness = 55; darkSaturation = 92;
         break;
-      case 7:
-        lightLightness = 42; lightSaturation = 90;
-        darkLightness = 60; darkSaturation = 85;
+      case 7: // Dark warning
+        lightLightness = 45; lightSaturation = 88;
+        darkLightness = 68; darkSaturation = 85;
         break;
-      case 8:
-        lightLightness = 32; lightSaturation = 85;
-        darkLightness = 70; darkSaturation = 75;
+      case 8: // Very dark
+        lightLightness = 35; lightSaturation = 80;
+        darkLightness = 78; darkSaturation = 75;
         break;
       default:
-        lightLightness = 50; lightSaturation = 95;
-        darkLightness = 50; darkSaturation = 95;
+        lightLightness = 55; lightSaturation = 92;
+        darkLightness = 55; darkSaturation = 92;
     }
+    
+    const lightColor = hslToHex(warningBase.h, lightSaturation, lightLightness);
+    const darkColor = hslToHex(warningBase.h + 5, darkSaturation, darkLightness); // Slightly more golden in dark mode
     
     shades.push({
       name: `warning-${i.toString().padStart(2, '0')}`,
-      light: hslToHex(warningBase.h, lightSaturation, lightLightness),
-      dark: hslToHex(warningBase.h + 3, darkSaturation, darkLightness),
-      description: `Warning color shade ${i.toString().padStart(2, '0')} - optimized for accessibility and contrast`
+      light: lightColor,
+      dark: darkColor,
+      description: `Warning color shade ${i.toString().padStart(2, '0')} - optimized for attention and readability`
     });
   }
   
   return shades;
 };
 
-// Generate success colors (8 colors)
+// Advanced Success Colors - Green spectrum optimized for positivity
 const generateSuccessColors = () => {
-  const successBase = { h: 140, s: 85, l: 42 };
+  // Base success color: Professional green
+  const successBase = { h: 145, s: 75, l: 45 }; // #17B26A equivalent
   const shades = [];
   
   for (let i = 1; i <= 8; i++) {
     let lightLightness, lightSaturation, darkLightness, darkSaturation;
     
     switch(i) {
-      case 1:
+      case 1: // Very light backgrounds
         lightLightness = 97; lightSaturation = 30;
-        darkLightness = 10; darkSaturation = 45;
+        darkLightness = 16; darkSaturation = 45;
         break;
-      case 2:
-        lightLightness = 91; lightSaturation = 45;
-        darkLightness = 16; darkSaturation = 55;
+      case 2: // Light backgrounds
+        lightLightness = 92; lightSaturation = 45;
+        darkLightness = 23; darkSaturation = 55;
         break;
-      case 3:
+      case 3: // Subtle accents
         lightLightness = 82; lightSaturation = 60;
-        darkLightness = 24; darkSaturation = 65;
+        darkLightness = 30; darkSaturation = 65;
         break;
-      case 4:
-        lightLightness = 68; lightSaturation = 75;
-        darkLightness = 34; darkSaturation = 75;
+      case 4: // Medium contrast
+        lightLightness = 70; lightSaturation = 70;
+        darkLightness = 40; darkSaturation = 72;
         break;
-      case 5:
-        lightLightness = 52; lightSaturation = 85;
-        darkLightness = 46; darkSaturation = 80;
+      case 5: // Standard success
+        lightLightness = 58; lightSaturation = 75;
+        darkLightness = 52; darkSaturation = 75;
         break;
-      case 6:
-        lightLightness = 42; lightSaturation = 85;
-        darkLightness = 42; darkSaturation = 85;
+      case 6: // Strong success (main)
+        lightLightness = 45; lightSaturation = 75;
+        darkLightness = 45; darkSaturation = 75;
         break;
-      case 7:
-        lightLightness = 34; lightSaturation = 80;
-        darkLightness = 52; darkSaturation = 80;
+      case 7: // Dark success
+        lightLightness = 35; lightSaturation = 72;
+        darkLightness = 62; darkSaturation = 72;
         break;
-      case 8:
-        lightLightness = 26; lightSaturation = 75;
-        darkLightness = 62; darkSaturation = 70;
+      case 8: // Very dark
+        lightLightness = 25; lightSaturation = 65;
+        darkLightness = 75; darkSaturation = 65;
         break;
       default:
-        lightLightness = 42; lightSaturation = 85;
-        darkLightness = 42; darkSaturation = 85;
+        lightLightness = 45; lightSaturation = 75;
+        darkLightness = 45; darkSaturation = 75;
     }
     
     shades.push({
       name: `success-${i.toString().padStart(2, '0')}`,
       light: hslToHex(successBase.h, lightSaturation, lightLightness),
       dark: hslToHex(successBase.h - 5, darkSaturation, darkLightness),
-      description: `Success color shade ${i.toString().padStart(2, '0')} - optimized for accessibility and contrast`
+      description: `Success color shade ${i.toString().padStart(2, '0')} - optimized for positive feedback`
     });
   }
   
   return shades;
 };
 
-// Generate info colors (8 colors)
+// Advanced Info Colors - Blue spectrum optimized for information
 const generateInfoColors = () => {
-  const infoBase = { h: 210, s: 85, l: 52 };
+  // Base info color: Professional blue
+  const infoBase = { h: 210, s: 92, l: 60 }; // #2E90FA equivalent
   const shades = [];
   
   for (let i = 1; i <= 8; i++) {
